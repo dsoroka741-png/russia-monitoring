@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Russian Monitor — макет</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#061421;--panel:#091b2a;--line:#20384c;--text:#e5f2ff;--muted:#91adc5;--blue:#249cff;--red:#dc303b;--yellow:#f1c21b;--darkred:#720b19;--orange:#f07808}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+body{overflow:hidden}
+header{height:66px;display:flex;align-items:center;gap:12px;padding:0 18px;background:#071522;border-bottom:1px solid var(--line);position:relative;z-index:500}
+.logo{width:39px;height:39px;border:3px solid var(--blue);border-radius:50%;display:grid;place-items:center;color:#69c7ff;font-size:22px;flex:none}
+.brand{min-width:0}.brand h1{margin:0;font-size:18px;letter-spacing:1.1px}.brand p{margin:4px 0 0;font-size:12px;color:var(--muted)}
+.status{margin-left:auto;display:flex;align-items:center;gap:8px;color:#a9c7e1;font-size:12px;white-space:nowrap}.dot{width:9px;height:9px;background:#18c47b;border-radius:50%}
+.head-actions{display:flex;gap:8px;margin-left:8px}
+.head-btn{border:1px solid #28455d;background:#0b2032;color:#dceeff;border-radius:8px;padding:9px 11px;font-size:12px;cursor:pointer}
+main{height:calc(100dvh - 66px);position:relative}
+#map{position:absolute;inset:0;background:#102437}
+.overlay{position:absolute;z-index:450;background:#071927ed;border:1px solid #254158;border-radius:10px;box-shadow:0 8px 25px #0005;backdrop-filter:blur(7px)}
+.legend{left:14px;top:14px;width:225px;padding:13px}
+.overlay-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:bold;letter-spacing:.5px;margin-bottom:10px}
+.collapse{background:transparent;color:#d8eaff;border:0;font-size:20px;line-height:1;cursor:pointer;padding:0 2px}
+.legend-row{display:flex;align-items:center;gap:10px;font-size:12px;margin:11px 0;color:#d8e8f5;line-height:1.35}
+.swatch{width:14px;height:14px;border-radius:50%;flex:none}
+.legend-note{border-top:1px solid #294258;padding-top:9px;margin-top:11px;color:#8faac1;font-size:10px;line-height:1.45}
+.legend.collapsed{width:auto;padding:10px 12px}.legend.collapsed .legend-content{display:none}.legend.collapsed .overlay-title{margin:0}
+.feed{right:14px;top:14px;bottom:56px;width:290px;display:flex;flex-direction:column;overflow:hidden}
+.feed-head{padding:13px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:bold}
+.count{font-size:11px;padding:4px 8px;background:#153049;border-radius:20px;color:#c9e4fa}
+.feed-list{overflow:auto}.event{padding:12px;border-bottom:1px solid #1b3449;display:flex;gap:9px;cursor:pointer}.event:hover,.event.active{background:#102a40}
+.event .swatch{margin-top:2px}.event-body{min-width:0}.event-title{font-size:11px;font-weight:bold;margin-bottom:5px}.event-region{font-size:12px;color:#8fc8f2;margin-bottom:4px}.event-time{font-size:10px;color:#7999b5}
+.map-note{position:absolute;z-index:400;left:14px;bottom:12px;max-width:min(580px,calc(100% - 28px));padding:9px 12px;display:flex;gap:9px;align-items:center;font-size:10px;line-height:1.4;color:#9bb7cf}
+.info{width:17px;height:17px;border:1px solid #83a6c5;border-radius:50%;display:grid;place-items:center;flex:none}
+.mobile-feed-btn{display:none}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#091827;color:#e6f1fb;border:1px solid #28465f}
+.leaflet-popup-content{margin:12px;line-height:1.45}.popup-title{font-weight:bold;font-size:13px;margin-bottom:7px}.popup-pill{display:inline-block;color:#fff;padding:4px 7px;border-radius:5px;font-size:11px;margin-bottom:6px}.popup-copy{font-size:11px;color:#b3cbe0}
+.leaflet-control-zoom a{background:#0a1b2b!important;color:#e6f1fb!important;border-color:#2a465d!important}
+.leaflet-control-attribution{background:#071522dd!important;color:#87a8c2!important}.leaflet-control-attribution a{color:#68bfff!important}
+@media(max-width:700px){
+ header{height:64px;padding:0 11px;gap:9px}
+ .logo{width:36px;height:36px;font-size:20px}
+ .brand h1{font-size:14px;letter-spacing:.7px}.brand p{font-size:10px;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .status{display:none}.head-actions{margin-left:auto}.head-btn{padding:8px 9px;font-size:11px}
+ main{height:calc(100dvh - 64px)}
+ .legend{left:9px;top:9px;width:190px;padding:10px}
+ .overlay-title{font-size:11px;margin-bottom:7px}
+ .legend-row{font-size:11px;margin:8px 0;gap:8px}.swatch{width:13px;height:13px}
+ .legend-note{font-size:9px;margin-top:8px;padding-top:7px}
+ .legend.collapsed{width:auto}
+ .feed{display:none;left:8px;right:8px;top:auto;bottom:58px;width:auto;max-height:48%;border-radius:10px}
+ .feed.mobile-open{display:flex}
+ .mobile-feed-btn{display:block;position:absolute;z-index:460;right:10px;top:10px}
+ .map-note{left:8px;bottom:7px;padding:7px 9px;font-size:9px;max-width:calc(100% - 16px)}
+ .leaflet-control-attribution{font-size:8px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" aria-hidden="true">◎</div>
+  <div class="brand"><h1>RUSSIAN MONITOR</h1><p>Карта публичных региональных предупреждений</p></div>
+  <div class="status"><span class="dot"></span><span>Демо-режим<br><span style="color:#7699b8">Источник не подключён</span></span></div>
+  <div class="head-actions">
+    <button class="head-btn" id="fit-btn" type="button">Вся Россия</button>
+    <button class="head-btn mobile-feed-btn" id="feed-toggle" type="button">Сообщения</button>
+  </div>
+</header>
+<main>
+  <div id="map" aria-label="Карта России"></div>
+  <section class="overlay legend" id="legend">
+    <div class="overlay-title"><span>ЛЕГЕНДА</span><button class="collapse" id="legend-toggle" aria-label="Свернуть легенду">−</button></div>
+    <div class="legend-content">
+      <div class="legend-row"><span class="swatch" style="background:var(--red)"></span>Опасность БПЛА</div>
+      <div class="legend-row"><span class="swatch" style="background:var(--yellow)"></span>Внимание по БПЛА</div>
+      <div class="legend-row"><span class="swatch" style="background:var(--darkred)"></span>Ракетная опасность</div>
+      <div class="legend-row"><span class="swatch" style="background:var(--orange)"></span>Внимание по ракетной опасности</div>
+      <div class="legend-note">Демонстрационные данные. Источник Telegram пока не подключён.</div>
+    </div>
+  </section>
+  <section class="overlay feed" id="feed">
+    <div class="feed-head"><span>Последние сообщения</span><span class="count" id="event-count">4</span></div>
+    <div class="feed-list" id="feed-list"></div>
+  </section>
+  <div class="overlay map-note"><span class="info">i</span><span>Макет интерфейса. Цвета и отметки не являются актуальными предупреждениями.</span></div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const styles={
+ uav:{color:'#dc303b',label:'Опасность БПЛА'},
+ uavWatch:{color:'#f1c21b',label:'Внимание по БПЛА'},
+ rocket:{color:'#720b19',label:'Ракетная опасность'},
+ rocketWatch:{color:'#f07808',label:'Внимание по ракетной опасности'}
+};
+// Фиктивные примеры только для демонстрации внешнего вида.
+const events=[
+ {id:1,region:'Демо-регион Северо-Запад',type:'uav',time:'Пример времени · 11:48',coords:[59.9,40.5]},
+ {id:2,region:'Демо-регион Юг',type:'uavWatch',time:'Пример времени · 11:32',coords:[47.2,40.2]},
+ {id:3,region:'Демо-регион Центр',type:'rocket',time:'Пример времени · 10:55',coords:[52.7,36.4]},
+ {id:4,region:'Демо-регион Восток',type:'rocketWatch',time:'Пример времени · 10:41',coords:[55.2,128.4]}
+];
+const map=L.map('map',{zoomControl:true,scrollWheelZoom:true,preferCanvas:true});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+ maxZoom:18,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
+}).addTo(map);
+function fitRussia(){
+ // Broad geographic extent of Russia; Leaflet chooses a zoom that fits the current screen.
+ map.fitBounds([[41,19],[82,190]],{paddingTopLeft:window.innerWidth<=700?[12,12]:[250,20],paddingBottomRight:window.innerWidth<=700?[12,45]:[310,55]});
+}
+const layer=L.layerGroup().addTo(map);
+function popup(e){
+ const s=styles[e.type];
+ return `<div class="popup-title">${e.region}</div><span class="popup-pill" style="background:${s.color}">${s.label}</span><div class="popup-copy">${e.time}<br>Демонстрационная запись — не реальное предупреждение.</div>`;
+}
+function highlight(id){document.querySelectorAll('.event').forEach(n=>n.classList.toggle('active',Number(n.dataset.id)===id))}
+events.forEach(e=>{
+ const s=styles[e.type];
+ const m=L.circleMarker(e.coords,{radius:7,color:'#d9edff',weight:1,fillColor:s.color,fillOpacity:.95}).addTo(layer).bindPopup(popup(e));
+ m.on('click',()=>highlight(e.id));
+ const row=document.createElement('div');row.className='event';row.dataset.id=e.id;
+ row.innerHTML=`<span class="swatch" style="background:${s.color}"></span><div class="event-body"><div class="event-title">${s.label}</div><div class="event-region">${e.region}</div><div class="event-time">${e.time}</div></div>`;
+ row.onclick=()=>{map.flyTo(e.coords,5,{duration:.45});m.openPopup();highlight(e.id)};
+ document.getElementById('feed-list').appendChild(row);
+});
+document.getElementById('event-count').textContent=events.length;
+document.getElementById('fit-btn').addEventListener('click',fitRussia);
+document.getElementById('legend-toggle').addEventListener('click',()=>{
+ const box=document.getElementById('legend');box.classList.toggle('collapsed');
+ document.getElementById('legend-toggle').textContent=box.classList.contains('collapsed')?'+':'−';
+});
+document.getElementById('feed-toggle').addEventListener('click',()=>{
+ const feed=document.getElementById('feed');feed.classList.toggle('mobile-open');
+ document.getElementById('feed-toggle').textContent=feed.classList.contains('mobile-open')?'Скрыть':'Сообщения';
+});
+fitRussia();
+window.addEventListener('resize',()=>{map.invalidateSize();fitRussia()});
+</script>
+</body>
+</html>
